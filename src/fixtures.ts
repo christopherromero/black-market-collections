@@ -46,12 +46,6 @@ export const decks: Deck[] = [
     entries: cards.filter(card => card.colors.includes('U') || card.colors.includes('C')).map(card => ({ cardId: card.id, quantity: 4 })) },
 ]
 
-export const showcases = [
-  { title: 'The Drowned Observatory', eyebrow: 'Knowledge is its own currency.', description: 'Some treasures are buried. Others are waiting beneath the surface. Find the next chapter hiding in your collection.', theme: 'Secrets from the deep', art: 0, cards: ['aetherwell', 'tidebound', 'sentinel'] },
-  { title: 'The Gilded Canopy', eyebrow: 'Nothing valuable stays forgotten.', description: 'From forgotten binders to your next Commander centerpiece. Discover the possibilities taking root in what you already own.', theme: 'Wealth in the wilds', art: 1, cards: ['orrery', 'canopy', 'moss'] },
-  { title: 'The Nightfall Syndicate', eyebrow: 'The best connections are already yours.', description: 'A little knowledge. A little ambition. An entire collection of possibilities. Make every card part of a bigger story.', theme: 'Deals after dark', art: 2, cards: ['broker', 'lantern', 'fieldnotes'] },
-]
-
 export const OBSERVED_AT = '2026-10-29T06:00:00Z'
 export const priceObservations = (row: Holding) => Array.from({ length: 14 }, (_, day) => ({
   date: `Oct ${day + 16}`,

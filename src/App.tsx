@@ -1,90 +1,71 @@
 import { Component, lazy, Suspense, useState } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
-import { ArrowRight, BookOpen, CircleHelp, LayoutDashboard, Layers3, Menu, ShieldCheck, Sparkles, X } from 'lucide-react'
-import { BrowserRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { CardTile, Landscape, Mark, PageTitle, Panel, TextLink } from './components'
-import { cards, holdings, showcases } from './fixtures'
+import { BookOpen, CircleHelp, Layers3, Menu, X } from 'lucide-react'
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { Mark, PageTitle, Panel, SourceNotice } from './components'
 import { CollectionProvider, useCollection } from './state'
 import { EMPTY_QUERY } from './domain'
 
-const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Collection = lazy(() => import('./pages/Collection'))
 const CardDetail = lazy(() => import('./pages/CardDetail'))
 const Decks = lazy(() => import('./pages/Decks'))
+const ImportCollection = lazy(() => import('./pages/ImportCollection'))
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
   componentDidCatch(error: Error, info: ErrorInfo) { console.error('Application render failed', error, info.componentStack) }
   render() {
-    return this.state.failed ? <main className="fatal"><h1>The archive could not open.</h1><p>Your demo preferences have not been deleted. Reload to try again, or check the browser console for details.</p><button className="button primary" onClick={() => location.reload()}>Reload application</button></main> : this.props.children
+    return this.state.failed ? <main className="fatal"><h1>The collection could not load.</h1><p>Your saved filters have not been deleted. Reload to try again, or check the browser console for details.</p><button className="button primary" onClick={() => location.reload()}>Reload</button></main> : this.props.children
   }
 }
-
-function Landing({ initialShowcase, initialError }: { initialShowcase: number; initialError: string | null }) {
-  const [index, setIndex] = useState(initialShowcase)
-  const showcase = showcases[index]
-  return <div className="landing">
-    <header className="public-header"><Link to="/" className="brand"><Mark /><span>BLACK MARKET<small>COLLECTION</small></span></Link><nav aria-label="Public navigation"><a href="#inside">Inside the vault</a><Link to="/overview" className="button primary">Explore the demo <ArrowUpRightIcon /></Link></nav></header>
-    {initialError && <p role="status" className="notice warning">{initialError}</p>}
-    <main id="main">
-      <section className="landing-hero">
-        <Landscape variant={showcase.art} className="hero-landscape" />
-        <div className="hero-shade" />
-        <div className="hero-copy"><p className="eyebrow gold"><span className="tiny-diamond" /> A LITTLE KNOWLEDGE. A LOT OF POSSIBILITIES.</p><h1>Know what<br />you <em>hold.</em></h1><p>Your next Commander deck might already be in your binder. Make the connections. Uncover the value. Open your vault.</p><div className="hero-actions"><Link to="/overview" className="button primary">Enter the demo vault <ArrowRight size={17} /></Link><a className="button ghost" href="#inside">Take a look inside</a></div><div className="hero-proof"><ShieldCheck size={15} /> Personal by design.<span /> No account connected.<span /> Synthetic data only.</div></div>
-        <div className="showcase-caption"><span className="eyebrow">CURATED DEMO / {String(index + 1).padStart(2, '0')}</span><h2>{showcase.title}</h2><p>{showcase.theme}</p><button className="text-link" onClick={() => setIndex((index + 1) % showcases.length)}>Another connection <ArrowRight size={15} /></button></div>
-        <div className="hero-number">U / B / G</div>
-      </section>
-      <section className="landing-intro" id="inside"><div><p className="eyebrow gold">YOUR CARDS. YOUR CONNECTIONS.</p><h2>More than a list.<br />A collection of possibilities.</h2></div><p>Bring your binders and Commander plans into focus. See what you own, what is waiting for a deck, and where every physical copy belongs.</p></section>
-      <section className="feature-grid">
-        {[{ icon: Layers3, title: 'Every card accounted for.', body: 'Exact printings, finishes, binders, and quantities. A collection explorer that knows the details matter.' }, { icon: BookOpen, title: 'Find your next 99.', body: 'Connect your collection to Commander plans. See missing cards and distinguish buildable decks from decks you can keep assembled.' }, { icon: Sparkles, title: 'A little market intelligence.', body: 'Estimated values with honest coverage, separate finish prices, and visible gaps. Missing never means zero.' }].map(feature => <article key={feature.title}><feature.icon size={22} /><h3>{feature.title}</h3><p>{feature.body}</p></article>)}
-      </section>
-      <section className="landing-spotlights"><div className="spread"><div><p className="eyebrow gold">A DIFFERENT CONNECTION, EVERY VISIT</p><h2>{showcase.eyebrow}</h2></div><span className="badge">Fictional Commander showcase</span></div><p className="muted">{showcase.description}</p><div className="spotlight-grid">{showcase.cards.map(id => <CardTile key={id} holding={holdings.find(row => row.card.id === id && row.finish === 'Nonfoil')!} />)}</div><p className="art-credit">Original synthetic illustrations. No MTGPics artwork, real collection data, power rankings, or popularity statistics are used. Showcase changes on page load; saved holdings do not.</p></section>
-      <section className="landing-cta"><p className="eyebrow gold">THE NEXT GREAT DECK STARTS HERE.</p><h2>Open the binder.<br />See the bigger picture.</h2><Link to="/collection" className="button primary">Browse the demo collection <ArrowRight size={17} /></Link></section>
-    </main>
-    <footer className="public-footer"><span>BLACK MARKET COLLECTION</span><p>A personal MTG collection & Commander project. Unofficial and not affiliated with Wizards of the Coast.</p><span>Built for your own little empire.</span></footer>
-  </div>
-}
-
-function ArrowUpRightIcon() { return <ArrowRight size={16} className="diagonal-arrow" /> }
 
 function Shell() {
   const [menu, setMenu] = useState(false)
   const { pathname } = useLocation()
-  const { message, dismiss, setQuery } = useCollection()
-  const nav = [{ to: '/overview', label: 'Overview', icon: LayoutDashboard }, { to: '/collection', label: 'Collection', icon: Layers3 }, { to: '/decks', label: 'Commander decks', icon: BookOpen }]
+  const { message, dismiss, setQuery, source, binders, revision } = useCollection()
+  const nav = [{ to: '/collection', label: 'Collection', icon: Layers3 }, { to: '/decks', label: 'Commander decks', icon: BookOpen }]
   return <div className="app-shell">
-    <header className="mobile-header"><Link to="/" className="brand"><Mark /><span>BLACK MARKET<small>COLLECTION</small></span></Link><button className="icon-button" onClick={() => setMenu(!menu)} aria-label={menu ? 'Close navigation' : 'Open navigation'} aria-expanded={menu}>{menu ? <X /> : <Menu />}</button></header>
+    <header className="mobile-header"><Link to="/collection" className="brand"><Mark /><span>Black Market<small>Collection</small></span></Link><button className="icon-button" onClick={() => setMenu(!menu)} aria-label={menu ? 'Close navigation' : 'Open navigation'} aria-expanded={menu}>{menu ? <X /> : <Menu />}</button></header>
     {menu && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMenu(false)} />}
     <aside className={`sidebar ${menu ? 'is-open' : ''}`}>
-      <Link to="/" className="brand"><Mark /><span>BLACK MARKET<small>COLLECTION</small></span></Link>
-      <div className="workspace-label"><span className="status-dot" /> THE DEMO VAULT <span className="badge">DEMO</span></div>
+      <Link to="/collection" className="brand"><Mark /><span>Black Market<small>Collection</small></span></Link>
       <nav aria-label="Main navigation">{nav.map(item => <NavLink key={item.to} to={item.to} onClick={() => { setMenu(false); window.scrollTo(0, 0) }}><item.icon size={19} />{item.label}</NavLink>)}</nav>
-      <div className="sidebar-binders"><p className="eyebrow">YOUR DEMO BINDERS</p>{['Main binder', 'Showcase', 'Trade archive', 'Commander box'].map((binder, i) => <Link key={binder} to="/collection" onClick={() => { setQuery({ ...EMPTY_QUERY, binder }); setMenu(false) }}><span className={`binder-dot dot-${i}`} />{binder}</Link>)}</div>
-      <div className="sidebar-bottom"><Link to="/about"><CircleHelp size={17} />About this milestone</Link><p>No account connected.<br />No private inventory loaded.</p><Link to="/" className="text-link">Back to the front door <ArrowRight size={14} /></Link></div>
+      <details className="sidebar-binders"><summary>Binders</summary>{binders.map((binder, i) => <Link key={binder} to="/collection" onClick={() => { setQuery({ ...EMPTY_QUERY, binder }); setMenu(false) }}><span className={`binder-dot dot-${i}`} />{binder}</Link>)}</details>
+      <div className="sidebar-bottom"><Link to="/import" onClick={() => setMenu(false)}>Import / manage collection</Link><Link to="/about" onClick={() => setMenu(false)}><CircleHelp size={17} />About & data</Link></div>
     </aside>
-    <div className="app-main"><div className="demo-strip"><span><ShieldCheck size={14} /> Synthetic demo workspace</span><span className="desktop-only">USD estimates / no live services</span></div>
+    <div className="app-main">{pathname.replace(/\/+$/, '').toLowerCase() !== '/collection' && <SourceNotice source={source} />}
       {message && <div role="status" className="notice spread"><span>{message}</span><button className="icon-button" aria-label="Dismiss notification" onClick={dismiss}><X size={17} /></button></div>}
-      <main id="main" key={pathname.startsWith('/cards/') ? 'detail' : 'workspace'}><Suspense fallback={<div className="loading" role="status"><div className="skeleton" /><h2>Opening the vault...</h2><p>Loading this screen. Your demo filters are retained.</p></div>}><Routes>
-        <Route path="/overview" element={<Dashboard />} />
+      <main id="main" key={`${pathname.startsWith('/cards/') ? 'detail' : 'workspace'}-${pathname === '/import' ? 'import' : revision}`}><Suspense fallback={<div className="loading" role="status"><div className="skeleton" /><h2>Loading...</h2><p>Your filters are unchanged.</p></div>}><Routes>
+        <Route path="/" element={<Navigate to="/collection" replace />} />
+        <Route path="/overview" element={<Navigate to="/collection" replace />} />
         <Route path="/collection" element={<Collection />} />
         <Route path="/cards/:holdingId" element={<CardDetail />} />
         <Route path="/decks" element={<Decks />} />
         <Route path="/about" element={<About />} />
+        <Route path="/import" element={<ImportCollection />} />
         <Route path="*" element={<NotFound />} />
-      </Routes></Suspense></main><footer className="app-footer">Synthetic data. Real possibilities.<span>BLACK MARKET COLLECTION / FIRST LOOK</span></footer>
+      </Routes></Suspense></main>
     </div>
   </div>
 }
 
 function About() {
-  return <><PageTitle eyebrow="THE FINE PRINT" title="A personal vault, in the making." /><Panel title="This is a working UI milestone"><p>All {cards.length} card identities, illustrations, prices, deck names, and holdings are fictional. Demo routes are public, not authenticated private collection routes. No credentials or real files are accepted.</p><p>Working now: rotating landing showcase, responsive dashboard, collection filtering, multi-sort, pagination, table/gallery views, CSV export, browser-saved views, card details, finish-specific observations, and allocation-aware deck summaries.</p><p>Next: choose an identity provider, add server-side authorization, SQLite, staged snapshot imports, and approved card data adapters. Do not load private collection data or deploy this milestone publicly as a production service.</p></Panel><Panel title="Source and artwork boundaries"><p>Moxfield will remain the collection source of truth; Archidekt will remain the deck-editing source of truth. This demo makes no provider requests. It does not claim automatic synchronization or real market history.</p><p>MTGPics images are not bundled. The original SVG artwork is a placeholder until image permissions, artist attribution, and permitted retrieval are verified. No official card text or artwork is reproduced.</p><TextLink to="/">See the public landing page</TextLink></Panel></>
+  const { source } = useCollection()
+  return <><PageTitle title="About this collection" />
+    <Panel title="A personal collection workspace"><p>Find cards, track copies across binders, and check what your Commander decks need.</p><p>Save one named filter set in this browser. Saving replaces the previous set; sorting and layout are not saved.</p></Panel>
+    <Panel title={source === 'empty' ? 'No collection loaded' : source === 'demo' ? 'Demo dataset active' : 'Local Moxfield collection active'}><p>{source === 'empty' ? 'Import a Moxfield export to get started. No sample cards or decks are active.' : source === 'demo' ? 'Cards, prices, observations and decks are fictional. Your saved collection is unchanged.' : 'Your imported entries are the source for every collection view. No demo decks or synthetic history are attached.'}</p><p><Link className="text-link" to="/import">Import or manage collection</Link>. Demo is optional and temporary. Replacement and deletion require confirmation.</p><p>Your original export is retained only in this browser, unencrypted. Shared browser profiles and scripts on this origin can access it. There is no cloud backup; keep your original file. Clearing site data removes it.</p></Panel>
+    <Panel title="USD reference estimates"><p>Scryfall prices match the exact printing, language and finish: nonfoil, foil or etched, with no finish fallback. They are reference estimates, not real-time execution quotes or condition-adjusted values. Purchase Price remains acquisition cost only.</p><p>Update all prices checks every imported printing, including cards outside the current page and filters. Missing prices stay unavailable; collection values always show priced-copy coverage. Automatic browsing checks only the active page or detail, refreshing quotes older than 24 hours.</p><p>Public quotes and set metadata are saved in this browser using IndexedDB. History records actual retrieved quotes by printing and finish, not past trades or historical ownership. Earlier prices are never invented. Storage errors are visible; keep your original collection export as a backup.</p><p>Whole-collection refresh sends only printing identifiers in bounded batches, never quantities, tags, costs or original file contents. Those identifiers reveal the printings being requested. Other languages retain exact-language lookup; no alternate printing is substituted. Public quote history may remain after clearing the imported collection; clearing browser site data removes all local data.</p></Panel>
+    <Panel title="Images, metadata & privacy"><p>Complete card images load automatically. Only public set, collector number and language identifiers go to api.scryfall.com, never your file, quantities, tags, flags or costs. Images contact cards.scryfall.io, even with cached metadata. Both hosts receive your IP address. Empty and demo views make no provider requests.</p><p>Exact printing and language must match; there is no name-based or English fallback. Unresolved metadata remains unknown. Rules are Oracle text, not necessarily localized. Catalog images do not document your copy’s condition, alterations or proxy status.</p><p>Data and images from <a href="https://scryfall.com/docs/api" target="_blank" rel="noreferrer">Scryfall</a>, under its published API guidelines and the <a href="https://company.wizards.com/en/legal/fancontentpolicy" target="_blank" rel="noreferrer">Wizards Fan Content Policy</a>. Complete images preserve artist and copyright credits. Card art © Wizards of the Coast; artists credited beside resolved cards.</p><p>This is unofficial Fan Content, not approved or endorsed by Wizards of the Coast or Scryfall. Portions of the materials used are property of Wizards of the Coast. © Wizards of the Coast LLC.</p></Panel>
+    <Panel title="Collection banner attribution"><p>The collection header uses <a href="https://www.mtgpics.com/card?ref=acr087" target="_blank" rel="noreferrer">Black Market Connections (Assassin's Creed, ACR #87)</a>, illustrated by Filipe Pagliuso. Artwork © Wizards of the Coast LLC. The user-supplied <a href="https://www.mtgpics.com/pics/art/acr/087.jpg" target="_blank" rel="noreferrer">MTGPics JPEG</a> is bundled unchanged at 1920×1451, including its copyright notice; CSS crops the display and adds gradients. Displaying it makes no external banner request.</p><p>This is a user-requested local preview, not public redistribution approval. MTGPics identifies Wizards' copyright but provides no asset-specific reuse license; attribution and the Fan Content Policy do not establish permission for this particular use. Reuse/redistribution rights remain unconfirmed and must be checked before public distribution. No artist, MTGPics or Wizards endorsement is implied.</p></Panel>
+    <Panel title="App icon attribution"><p>The brand mark and favicon use <a href="https://deadlock.wiki/File:Enchanter%27s_Satchel.png" target="_blank" rel="noreferrer">Enchanter's Satchel</a> from Deadlock, sourced via Deadlock Wiki. Game artwork © Valve Corporation, not project-owned or Wizards of the Coast artwork. The unchanged 137×137 PNG original is bundled locally; displaying it makes no wiki/CDN request.</p><p>The wiki's CC BY-SA notice excludes game content and non-text media. No asset-specific reuse license was provided; reuse/redistribution permission remains unconfirmed. No Valve or Deadlock Wiki endorsement is implied.</p></Panel>
+  </>
 }
 
 function NotFound() {
-  return <div className="empty-state"><h1>This room is not in the archive.</h1><p>The address does not match a demo screen.</p><Link className="button primary" to="/overview">Return to overview</Link></div>
+  return <div className="empty-state"><h1>Page not found</h1><p>This address does not match a collection page.</p><Link className="button primary" to="/collection">Back to collection</Link></div>
 }
 
-export default function App({ showcase, showcaseError }: { showcase: number; showcaseError: string | null }) {
-  return <ErrorBoundary><BrowserRouter><CollectionProvider><a className="skip-link" href="#main">Skip to content</a><Routes><Route path="/" element={<Landing initialShowcase={showcase} initialError={showcaseError} />} /><Route path="*" element={<Shell />} /></Routes></CollectionProvider></BrowserRouter></ErrorBoundary>
+export default function App() {
+  return <ErrorBoundary><BrowserRouter><CollectionProvider><a className="skip-link" href="#main">Skip to content</a><Shell /></CollectionProvider></BrowserRouter></ErrorBoundary>
 }

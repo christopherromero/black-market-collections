@@ -1,9 +1,34 @@
-import { isQuery, nextShowcase } from './domain'
+import { isQuery } from './domain'
 import type { Query } from './domain'
-import { showcases } from './fixtures'
+import { parseMoxfield } from './moxfield'
+import type { ImportPreview } from './moxfield'
 
 export interface SavedView { name: string; query: Query }
 export const SAVED_KEY = 'bmc:synthetic:saved-view:v1'
+export const COLLECTION_KEY = 'bmc:local:moxfield:v1'
+
+export function loadCollection(storage: Pick<Storage, 'getItem'>): { preview: ImportPreview | null; error: string | null } {
+  try {
+    const raw = storage.getItem(COLLECTION_KEY)
+    if (!raw) return { preview: null, error: null }
+    const value: unknown = JSON.parse(raw)
+    if (!value || typeof value !== 'object' || !('version' in value) || value.version !== 1 || !('csv' in value) || typeof value.csv !== 'string')
+      throw new Error('Unsupported collection format')
+    const preview = parseMoxfield(value.csv)
+    if (preview.errors.length) throw new Error('Invalid collection')
+    return { preview, error: null }
+  } catch {
+    // JSON/parser errors can contain private text: never log the exception.
+    return { preview: null, error: 'Local collection could not be read. No collection loaded; the stored collection has not been deleted. Check browser storage permissions and reload, or choose a valid export from Import collection.' }
+  }
+}
+
+export function storeCollection(storage: Pick<Storage, 'setItem'>, csv: string): ImportPreview {
+  const preview = parseMoxfield(csv)
+  if (preview.errors.length) throw new Error('File validation failed. Fix every reported row before applying.')
+  storage.setItem(COLLECTION_KEY, JSON.stringify({ version: 1, csv }))
+  return preview
+}
 
 export function loadSavedView(storage: Pick<Storage, 'getItem'>): { view: SavedView | null; error: string | null } {
   try {
@@ -11,28 +36,14 @@ export function loadSavedView(storage: Pick<Storage, 'getItem'>): { view: SavedV
     if (!raw) return { view: null, error: null }
     const value: unknown = JSON.parse(raw)
     if (!value || typeof value !== 'object' || !('name' in value) ||
-      typeof value.name !== 'string' || !('query' in value) || !isQuery(value.query)) {
+      typeof value.name !== 'string' || !('query' in value) || !value.query || typeof value.query !== 'object' || Array.isArray(value.query)) {
       throw new Error('Saved view has an unsupported format')
     }
-    return { view: { name: value.name, query: value.query }, error: null }
-  } catch (error) {
-    console.error('Unable to load the saved demo view', error)
-    return { view: null, error: 'Your saved demo view could not be read. You can still browse; saving again will replace it.' }
-  }
-}
-
-export function chooseShowcase(): { index: number; error: string | null } {
-  const sample = new Uint32Array(1)
-  crypto.getRandomValues(sample)
-  const random = sample[0] / 2 ** 32
-  try {
-    const raw = sessionStorage.getItem('bmc:showcase')
-    const previous = raw === null ? null : Number(raw)
-    const index = nextShowcase(previous, random, showcases.length)
-    sessionStorage.setItem('bmc:showcase', String(index))
-    return { index, error: null }
-  } catch (error) {
-    console.error('Unable to remember the previous demo showcase', error)
-    return { index: nextShowcase(null, random, showcases.length), error: 'Browser storage is unavailable. The showcase is random, but may repeat on reload.' }
+    const query = { sets: [], excludeSets: false, ...value.query }
+    if (!isQuery(query)) throw new Error('Saved view has an unsupported format')
+    return { view: { name: value.name, query }, error: null }
+  } catch {
+    console.error('Unable to load the saved view')
+    return { view: null, error: 'Your saved filters could not be read. You can still browse; saving again will replace them.' }
   }
 }

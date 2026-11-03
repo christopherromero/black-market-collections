@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EMPTY_QUERY, activeFilters, allocated, allocationConflicts, composition, deckSummary, exportCsv, isQuery, matchesQuery, nextShowcase, summarize, totalValue } from './domain'
+import { EMPTY_QUERY, activeFilters, allocated, allocationConflicts, composition, deckSummary, exportCsv, isQuery, matchesQuery, summarize, totalValue } from './domain'
 import { cards, decks, holdings, priceObservations } from './fixtures'
 
 describe('synthetic collection invariants', () => {
@@ -22,7 +22,7 @@ describe('synthetic collection invariants', () => {
   it('does not present missing prices as zero', () => {
     const missing = holdings.filter(row => row.priceCents === null)
     expect(missing.length).toBeGreaterThan(0)
-    expect(summarize(missing).valueCents).toBe(0)
+    expect(summarize(missing).valueCents).toBeNull()
     expect(summarize(missing).coverage).toBe(0)
     expect(totalValue(missing[0])).toBeNull()
     expect(summarize([]).coverage).toBe(0)
@@ -61,7 +61,7 @@ describe('full-dataset query semantics', () => {
     const query = { ...EMPTY_QUERY, binder: 'Main binder', finish: 'Nonfoil', minQuantity: 3, minValue: '1', maxValue: '200', maxMana: '4' }
     const rows = holdings.filter(row => matchesQuery(row, query, decks))
     expect(rows.length).toBeGreaterThan(0)
-    expect(rows.every(row => row.binder === 'Main binder' && row.quantity >= 3 && row.card.manaValue <= 4 && totalValue(row)! >= 100 && totalValue(row)! <= 20000)).toBe(true)
+    expect(rows.every(row => row.binder === 'Main binder' && row.quantity >= 3 && row.card.manaValue !== null && row.card.manaValue <= 4 && totalValue(row)! >= 100 && totalValue(row)! <= 20000)).toBe(true)
     const missing = holdings.filter(row => matchesQuery(row, { ...EMPTY_QUERY, pricing: 'missing' }, decks))
     expect(missing.every(row => row.priceCents === null)).toBe(true)
     const unused = holdings.filter(row => matchesQuery(row, { ...EMPTY_QUERY, usage: 'unused' }, decks))
@@ -102,26 +102,5 @@ describe('physical allocations and deck matching', () => {
     const conflicts = allocationConflicts(decks, holdings)
     expect(conflicts.length).toBeGreaterThan(0)
     for (const conflict of conflicts) expect(conflict.requested - conflict.owned).toBe(conflict.shortage)
-  })
-})
-
-describe('landing showcase rotation', () => {
-  it('chooses a different showcase after every reload without changing holdings', () => {
-    const before = JSON.stringify(holdings)
-    for (let previous = 0; previous < 3; previous++) for (const random of [0, 0.2, 0.5, 0.99]) {
-      const next = nextShowcase(previous, random, 3)
-      expect(next).not.toBe(previous)
-      expect(next).toBeGreaterThanOrEqual(0)
-      expect(next).toBeLessThan(3)
-    }
-    expect(JSON.stringify(holdings)).toBe(before)
-  })
-  it('handles first visits and a single option, and rejects invalid input', () => {
-    expect(nextShowcase(null, 0.99, 3)).toBe(2)
-    expect(nextShowcase(0, 0.5, 1)).toBe(0)
-    expect(nextShowcase(NaN, 0, 3)).toBe(0)
-    expect(() => nextShowcase(null, 1, 3)).toThrow()
-    expect(() => nextShowcase(null, 0, 0)).toThrow()
-    expect(() => nextShowcase(null, NaN, 3)).toThrow()
   })
 })

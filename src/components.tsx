@@ -1,12 +1,13 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { ArrowUpRight, Layers3, X } from 'lucide-react'
+import { ArrowUpRight, Layers3, RotateCw, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Card, Holding } from './domain'
-import { COLOR_NAMES, money, totalValue } from './domain'
+import { COLOR_NAMES, money, summarize, totalValue } from './domain'
+import { needsCatalogRefresh } from './scryfall'
 
 export function Mark() {
-  return <span className="brand-mark" aria-hidden="true"><Layers3 size={23} strokeWidth={1.5} /></span>
+  return <span className="brand-mark" aria-hidden="true"><img src="/enchanters-satchel.png" alt="" width={137} height={137} /></span>
 }
 
 export function Landscape({ variant = 0, className = '' }: { variant?: number; className?: string }) {
@@ -39,31 +40,90 @@ export function Landscape({ variant = 0, className = '' }: { variant?: number; c
   </svg>
 }
 
-export function CardArt({ card, back = false, compact = false }: { card: Card; back?: boolean; compact?: boolean }) {
-  return <div className={`card-art art-${card.art} ${compact ? 'compact-art' : ''}`} role="img" aria-label={`Original synthetic card illustration: ${back ? card.reverseName ?? card.name : card.name}`}>
-    <div className="card-art-heading"><span>{back ? card.reverseName : card.name}</span><span>{card.manaValue}</span></div>
-    <div className="card-art-window"><Landscape variant={back ? (card.art + 1) % 3 : card.art} /></div>
-    <div className="card-art-type">{back ? 'Land - Observatory' : card.type}</div>
-    <div className="card-art-rules"><p>{card.rules}</p><i>Some secrets are worth keeping.</i></div>
-    <div className="card-art-footer"><span>TST / ORIGINAL DEMO ART</span><span>{card.rarity}</span></div>
+export function CardArt({ card, back = false, compact = false, to, onOpen }: { card: Card; back?: boolean; compact?: boolean; to?: string; onOpen?: () => void }) {
+  const face = card.catalog?.faces[back ? 1 : 0]
+  const name = face?.name ?? (back ? card.reverseName ?? card.name : card.name)
+  const printing = card.printing
+  const alt = `${name} — ${back ? 'back' : 'front'} face${printing ? `, ${printing.set} #${printing.collectorNumber}, ${printing.language}` : ', fictional demo card'}`
+  if (face?.image)
+    return <FullCardImage key={face.image} url={face.image} alt={alt} artist={face.artist} compact={compact} to={to} onOpen={onOpen} />
+  const reason = !printing ? 'Demo card — no card image' : 'Exact card image unavailable'
+  const placeholder = <div className="card-image-placeholder" role="img" aria-label={`${alt}: ${reason}`}>
+    <Layers3 aria-hidden="true" size={24} /><span>{reason}</span><span className="small">{name}</span>
+  </div>
+  return to ? <Link className="card-image-link" to={to} onClick={onOpen}>{placeholder}</Link> : placeholder
+}
+
+function FullCardImage({ url, alt, artist, compact, to, onOpen }: { url: string; alt: string; artist: string | null; compact: boolean; to?: string; onOpen?: () => void }) {
+  const [failed, setFailed] = useState(false)
+  const image = <img className="full-card-image" src={url} alt={alt} loading={compact ? 'lazy' : 'eager'} decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+  return <div className="full-card">
+    {failed ? <div className="card-image-placeholder" role="img" aria-label={`${alt}: image failed to load`}><span>Image failed to load.</span>{compact && !to ? <span className="small">Open the gallery to retry.</span> : <button className="button ghost" onClick={() => setFailed(false)}>Retry image</button>}</div>
+      : to ? <Link className="card-image-link" to={to} onClick={onOpen}>{image}</Link> : image}
+    <p className="art-credit">Art: {artist ?? 'artist unavailable'} · Scryfall / © Wizards of the Coast</p>
   </div>
 }
 
 export function ColorPips({ card }: { card: Card }) {
+  if (!card.colors.length) return <span className="small muted">Identity unknown</span>
   return <span className="pips" aria-label={card.colors.map(color => COLOR_NAMES[color]).join(', ')}>
     {card.colors.map(color => <span className={`pip pip-${color}`} key={color} aria-hidden="true">{color}</span>)}
   </span>
 }
 
 export function CardTile({ holding, onOpen }: { holding: Holding; onOpen?: () => void }) {
-  return <Link to={`/cards/${holding.id}`} className="card-tile" onClick={onOpen}>
-    <div className="tile-image"><CardArt card={holding.card} compact /><span className="copy-badge">{holding.quantity} owned</span></div>
-    <div className="tile-meta"><strong>{holding.card.name}</strong><span>{holding.set} #{holding.collectorNumber} / {holding.finish}</span><div className="spread"><b>{money(totalValue(holding))}</b><ColorPips card={holding.card} /></div></div>
-  </Link>
+  const [back, setBack] = useState(false)
+  const to = `/cards/${holding.id}`
+  const hasBack = holding.card.catalog?.faces.length === 2 || Boolean(holding.card.reverseName)
+  return <article className="card-tile" aria-label={`${holding.card.name}, ${holding.set} #${holding.collectorNumber}`}>
+    <div className="tile-image"><CardArt card={holding.card} back={back} compact to={to} onOpen={onOpen} /></div>
+    <div className="tile-meta">
+      <PriceLine holding={holding} />
+      <span>{holding.quantity} owned · {holding.finish} · {holding.condition}</span>
+      <div className="gallery-card-actions">
+        <Link to={to} onClick={onOpen} aria-label={`Details for ${holding.card.name}, ${holding.set} #${holding.collectorNumber}, ${holding.language}`}>{holding.set.toUpperCase()} #{holding.collectorNumber} · {holding.language}</Link>
+        {hasBack && <button className="icon-button" onClick={() => setBack(value => !value)} aria-label={`Show ${back ? 'front' : 'back'} face of ${holding.card.name}`}><RotateCw size={16} /></button>}
+      </div>
+    </div>
+  </article>
 }
 
-export function PageTitle({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
-  return <div className="page-title"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1></div>{children}</div>
+export function PageTitle({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
+  return <div className="page-title"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}<h1>{title}</h1></div>{children}</div>
+}
+
+export function SourceNotice({ source }: { source: 'empty' | 'demo' | 'moxfield' }) {
+  if (source === 'empty') return null
+  return <div className="sample-notice">
+    <span className="badge">{source === 'demo' ? 'Sample data' : 'Local collection'}</span>
+    <p>{source === 'demo' ? 'Temporary demo · fictional cards and prices · any saved import is unchanged.' : 'Moxfield import · browser-only storage · Scryfall USD reference estimates.'}</p>
+    <div className="source-notice-links">{source === 'demo' && <Link to="/import">Exit demo</Link>}<Link to="/about">Details</Link></div>
+  </div>
+}
+
+export function PriceLine({ holding }: { holding: Holding }) {
+  return <span className="price-line">{money(holding.priceCents)} per copy · {money(totalValue(holding))} total</span>
+}
+
+export function EstimateSummary({ rows }: { rows: Holding[] }) {
+  const summary = summarize(rows)
+  return <p className="estimate-summary small" role="status"><strong>Priced subtotal: {money(summary.valueCents)}</strong> · {summary.pricedCopies} of {summary.copies} copies priced · USD reference estimate. {summary.unpricedCopies} unpriced copies excluded{summary.unpricedCopies ? '; partial coverage' : ''}.</p>
+}
+
+export function QuoteNote({ holding }: { holding: Holding }) {
+  const pricing = holding.card.catalog?.pricing
+  return <p className="quote-note small muted">{pricing?.error ?? (pricing?.retrievedAt
+    ? `Scryfall USD reference estimate · ${holding.finish} · ${needsCatalogRefresh(holding.card.catalog) ? 'stale (24h+)' : 'fresh (under 24h)'} · retrieved ${new Date(pricing.retrievedAt).toLocaleString()}. Not a live quote or condition-adjusted price.`
+    : 'Reference estimate not loaded. Open this printing or refresh to check.')}</p>
+}
+
+export function PriceComparison({ holding }: { holding: Holding }) {
+  const pricing = holding.card.catalog?.pricing
+  return <section className="price-comparison" aria-label="Finish price comparison">
+    <h3>USD reference prices by finish</h3>
+    <dl>{(['Nonfoil', 'Foil', 'Etched'] as const).map(finish => <div key={finish} data-owned={holding.finish === finish}><dt>{finish}{holding.finish === finish && <span className="small"> · your finish</span>}</dt><dd>{money(pricing && !pricing.error ? pricing.cents[finish] : null)}</dd></div>)}</dl>
+    <QuoteNote holding={holding} />
+  </section>
 }
 
 export function Panel({ title, note, children, action }: { title: string; note?: string; children: ReactNode; action?: ReactNode }) {
