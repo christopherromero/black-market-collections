@@ -7,13 +7,14 @@ When procurring your precon, there are two options: buying a WOTC precon or buil
 Given that there is such a huge difference in prices for precons that have been released over the years, **there is no maximum**, but there is a minimum price to ensure everyone gets a deck of comparable value. I also want to be respectful of folks' budgets, so the **minimum is $45**. If you would like to spend more than that, accepting that you might not get something of equal overall value, then go off, monarchs. 
 When looking at prices, please use those listed from either TCGplayer or Manapool.
 
-As for power level, please aim for a casual [bracket 2] precon deck (https://edhrec.com/guides/edhrec-guide-to-commander-brackets). That means no infinite combos or tutors that can consistently find combo pieces.
+As for power level, please aim for a casual [bracket 2](https://edhrec.com/guides/edhrec-guide-to-commander-brackets) precon deck. That means no infinite combos or tutors that can consistently find combo pieces.
 
 Here are the following options:
 1. **Buying a WOTC Precon**
 <br/>
 Here are a list of all the precons that WOTC has made. I believe the cheapest is currently $49 at the time of this writing.
-    - https://draftsim.com/commander-precons/
+
+    - [Draftsim: Every Commander Precon](https://draftsim.com/commander-precons/)
 
 2. **Build-Your-Own-Precon**
 <br/>
@@ -23,7 +24,8 @@ You are also more than welcome to use cards you already own, but please make sur
 </br>
 </br>
 Here is a playlist to our *Lord and Savior*, The Professor's, BYOPrecon vids:
-    - https://www.youtube.com/playlist?list=PLvqw7t0kbGX8nUk1o6qi00Y9ZLSTmgtAM
+
+    - [The Professor's BYOPrecon playlist](https://www.youtube.com/playlist?list=PLvqw7t0kbGX8nUk1o6qi00Y9ZLSTmgtAM)
 
 ## "Stealing" and Trading
 While stealing is typically part of White Elephant gift exchange, it might add unnecessary salt in this setting since many folks will get attached and want to go home with the deck they choose and played with.
