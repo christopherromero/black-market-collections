@@ -1,0 +1,152 @@
+<meta name="color-scheme" content="light dark">
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    } catch (e) {}
+
+    function currentTheme() {
+      var explicit = document.documentElement.getAttribute('data-theme');
+      if (explicit) return explicit;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var container = document.querySelector('.markdown-body');
+      if (!container) return;
+
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'theme-toggle';
+
+      function render() {
+        var dark = currentTheme() === 'dark';
+        button.textContent = dark ? '☀️ Light mode' : '🌙 Dark mode';
+        button.setAttribute('aria-pressed', String(dark));
+      }
+
+      button.addEventListener('click', function () {
+        var next = currentTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (e) {}
+        render();
+      });
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+      render();
+      container.insertBefore(button, container.firstChild);
+    });
+  })();
+</script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #24292e;
+    --muted: #586069;
+    --link: #0366d6;
+    --border: #e1e4e8;
+    --subtle-bg: #f6f8fa;
+    --code-bg: rgba(27, 31, 35, 0.05);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117;
+      --fg: #c9d1d9;
+      --muted: #8b949e;
+      --link: #58a6ff;
+      --border: #30363d;
+      --subtle-bg: #161b22;
+      --code-bg: rgba(110, 118, 129, 0.4);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0d1117;
+    --fg: #c9d1d9;
+    --muted: #8b949e;
+    --link: #58a6ff;
+    --border: #30363d;
+    --subtle-bg: #161b22;
+    --code-bg: rgba(110, 118, 129, 0.4);
+    color-scheme: dark;
+  }
+
+  body,
+  .markdown-body {
+    background-color: var(--bg);
+    color: var(--fg);
+  }
+
+  .markdown-body a {
+    color: var(--link);
+  }
+
+  .markdown-body h1,
+  .markdown-body h2 {
+    border-bottom-color: var(--border);
+  }
+
+  .markdown-body hr {
+    background-color: var(--border);
+  }
+
+  .markdown-body blockquote {
+    color: var(--muted);
+    border-left-color: var(--border);
+  }
+
+  .markdown-body code {
+    background-color: var(--code-bg);
+  }
+
+  .markdown-body pre {
+    background-color: var(--subtle-bg);
+  }
+
+  .markdown-body table tr {
+    background-color: var(--bg);
+    border-top-color: var(--border);
+  }
+
+  .markdown-body table tr:nth-child(2n) {
+    background-color: var(--subtle-bg);
+  }
+
+  .markdown-body table th,
+  .markdown-body table td {
+    border-color: var(--border);
+  }
+
+  .footer {
+    border-top-color: var(--border) !important;
+    color: var(--muted) !important;
+  }
+
+  .theme-toggle {
+    float: right;
+    margin: 0 0 1rem 1rem;
+    padding: 0.4rem 0.8rem;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--fg);
+    background-color: var(--subtle-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--muted);
+  }
+
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+  }
+</style>
