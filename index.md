@@ -26,8 +26,8 @@ Here are a list of all the precons that WOTC has made. I believe the cheapest is
 Things can get a little tricky here. My main concern with this option is power level. Please only select this option if you are either very confident in your deck building skills and can ensure a fair power level or if you are a using a well vetted deck list from the internet. If you do decide to go with this option, please include the necessary tokens and a deck box. It doesn't have to be fancy, just functional.
 <br/>
 You are also more than welcome to use cards you already own, but please make sure that they are in Lightly Played or better condition.
-</br>
-</br>
+<br/>
+<br/>
 Here is a playlist to our *Lord and Savior*, The Professor's, BYOPrecon vids:
 
     - [The Professor's BYOPrecon playlist](https://www.youtube.com/playlist?list=PLvqw7t0kbGX8nUk1o6qi00Y9ZLSTmgtAM)
