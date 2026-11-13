@@ -6,10 +6,19 @@ title: Precon White Elephant Rules
 # Precon White Elephant Rules and Guidelines
 Welcome to the Precon White Elephant! To participate, each of us will bring a wrapped Commander precon, then we will randomly generate an order where folks will blindly select a surprise deck, open it up, and play a game or two with it.
 
+### Our White Elephant Rules
+
+1. Everyone draws a number (1-9) to determine turn order.
+2. On your turn, open a wrapped gift or steal an already-opened gift.
+3. If your gift is stolen, you immediately open another gift or steal from someone else.
+4. No immediate steal-backs. You can’t take back the gift just stolen from you.
+5. A gift becomes “frozen” after a set number of steals, we are doing two.
+6. The first player gets a final chance to swap because they initially had nothing to steal.
+
 ## Gifting Options:
 When procurring your precon, there are two options: buying a WOTC precon or building your own precon.
 
-Given that there is such a huge difference in prices for precons that have been released over the years, **there is no maximum**, but there is a minimum price to ensure everyone gets a deck of comparable value. I also want to be respectful of folks' budgets, so the **minimum is $45**. If you would like to spend more than that, accepting that you might not get something of equal overall value, then go off, monarchs. 
+Given that there is such a huge difference in prices for precons that have been released over the years, **there is no maximum**, but there is a minimum price to ensure everyone gets a deck of comparable value. I also want to be respectful of folks' budgets, so the **minimum is $30**. If you would like to spend more than that, accepting that you might not get something of equal overall value, then go off, monarchs. 
 When looking at prices, please use those listed from either TCGplayer or Manapool.
 
 As for power level, please aim for a casual [bracket 2](https://edhrec.com/guides/edhrec-guide-to-commander-brackets) precon deck. That means no infinite combos or tutors that can consistently find combo pieces.
@@ -17,6 +26,7 @@ As for power level, please aim for a casual [bracket 2](https://edhrec.com/guide
 Here are the following options:
 1. **Buying a WOTC Precon**
 <br/>
+Regardless of price, any WoTC precon is fair game as (I would like to think) those have been professionally balanced.
 Here are a list of all the precons that WOTC has made. I believe the cheapest is currently $49 at the time of this writing.
 
     - [Draftsim: Every Commander Precon](https://draftsim.com/commander-precons/)
@@ -33,7 +43,7 @@ Here is a playlist to our *Lord and Savior*, The Professor's, BYOPrecon vids:
     - [The Professor's BYOPrecon playlist](https://www.youtube.com/playlist?list=PLvqw7t0kbGX8nUk1o6qi00Y9ZLSTmgtAM)
 
 ## "Stealing" and Trading
-While stealing is typically part of White Elephant gift exchange, it might add unnecessary salt in this setting since many folks will get attached and want to go home with the deck they choose and played with.
+Stealing is allowed, but please play nice. Once a precon is stolen 2 times it is then "frozen" aka locked and stays with its current holder for the rest of the exchange.
 
 While part of the value of this event is to try something new that might be out of your comfort zone, trading is allowed before or after playing, especially if you don't enjoy the deck's play style, colors, or if you already have a similar deck.
 
